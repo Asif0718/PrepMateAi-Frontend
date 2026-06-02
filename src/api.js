@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:8000/api",
+  baseURL: "https://prepmateai-backend-38q2.onrender.com/",
 });
 
 API.interceptors.request.use((req) => {
