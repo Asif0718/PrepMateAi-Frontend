@@ -18,13 +18,11 @@ function Nav({
   const navigate = useNavigate();
 
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("preparationGuide");
-    localStorage.removeItem("user");
-
-    window.dispatchEvent(new Event("authChange"));
-
-    navigate("/login", { replace: true });
+    localStorage.clear();
+  
+    console.log("TOKEN AFTER LOGOUT:", localStorage.getItem("token"));
+  
+    window.location.href = "/";
   };
 
   return (
