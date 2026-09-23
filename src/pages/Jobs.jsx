@@ -1,14 +1,90 @@
 import { useEffect, useState } from "react";
 import API from "../api";
 import Nav from "../components/Nav";
-import { FaExternalLinkAlt, FaCheckCircle } from "react-icons/fa";
+import { ExternalLink, CheckCircle2, MapPin, Building2, Clock, Search } from "lucide-react";
 
-function Jobs() {
+function JobCard({ job, applied, onApply }) {
+  return (
+    <article className="job-card">
+      <div className="job-card-header">
+        <div className="job-card-icon">
+          <Building2 size={18} />
+        </div>
+        <div className="job-card-meta">
+          <h3 className="job-card-title">{job.title || "Untitled"}</h3>
+          <p className="job-card-company">{job.company || "Company"}</p>
+        </div>
+      </div>
+      <div className="job-card-details">
+        {job.location && (
+          <span className="job-card-tag">
+            <MapPin size={13} />
+            {job.location}
+          </span>
+        )}
+        {job.type && (
+          <span className="job-card-tag">
+            <Clock size={13} />
+            {job.type}
+          </span>
+        )}
+      </div>
+      {job.description && (
+        <p className="job-card-desc">
+          {job.description.length > 160
+            ? `${job.description.slice(0, 160)}...`
+            : job.description}
+        </p>
+      )}
+      <div className="job-card-actions">
+        {job.apply_link ? (
+          <a
+            href={job.apply_link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-apply"
+          >
+            Apply <ExternalLink size={14} />
+          </a>
+        ) : (
+          <span className="btn-disabled">No link</span>
+        )}
+        <button
+          type="button"
+          disabled={applied}
+          onClick={() => onApply(job)}
+          className={applied ? "btn-applied" : "btn-mark"}
+        >
+          <CheckCircle2 size={14} />
+          {applied ? "Applied" : "Mark"}
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function JobSkeleton() {
+  return (
+    <div className="job-card job-card-skeleton">
+      <div className="skel-line skel-title" />
+      <div className="skel-line skel-company" />
+      <div className="skel-line skel-desc" />
+      <div className="skel-line skel-desc-short" />
+      <div className="job-card-actions">
+        <div className="skel-btn" />
+        <div className="skel-btn" />
+      </div>
+    </div>
+  );
+}
+
+export default function Jobs() {
   const [jobs, setJobs] = useState([]);
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
   const [loading, setLoading] = useState(false);
   const [appliedJobs, setAppliedJobs] = useState([]);
+  const [error, setError] = useState(null);
 
   const token = localStorage.getItem("token");
 
@@ -17,34 +93,26 @@ function Jobs() {
       const res = await API.get("/jobs/applied", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       setAppliedJobs(res.data.applied_jobs || []);
-    } catch (err) {
-      console.log(err.response?.data || err);
+    } catch {
+      // silent
     }
   };
 
-  useEffect(() => {
-    fetchAppliedJobs();
-  }, []);
+  useEffect(() => { fetchAppliedJobs(); }, []);
 
   const fetchJobs = async () => {
     if (!query.trim() || !location.trim()) {
-      alert("Please enter job role and location");
+      setError("Please enter job role and location");
       return;
     }
-
+    setError(null);
+    setLoading(true);
     try {
-      setLoading(true);
-
-      const res = await API.get("/jobs/search", {
-        params: { query, location },
-      });
-
+      const res = await API.get("/jobs/search", { params: { query, location } });
       setJobs(res.data.jobs || []);
     } catch (err) {
-      console.log(err.response?.data || err);
-      alert("Failed to fetch jobs");
+      setError(err.response?.data?.message || "Failed to fetch jobs");
     } finally {
       setLoading(false);
     }
@@ -52,162 +120,81 @@ function Jobs() {
 
   const markAsApplied = async (job) => {
     try {
-      await API.post(
-        "/jobs/applied",
-        {
-          title: job.title,
-          company: job.company,
-          location: job.location,
-          apply_link: job.apply_link,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      alert("Job marked as applied");
+      await API.post("/jobs/applied", {
+        title: job.title,
+        company: job.company,
+        location: job.location,
+        apply_link: job.apply_link,
+      }, { headers: { Authorization: `Bearer ${token}` } });
       fetchAppliedJobs();
-    } catch (err) {
-      console.log(err.response?.data || err);
+    } catch {
       alert("Failed to mark as applied");
     }
   };
 
-  const isAlreadyApplied = (job) => {
-    return appliedJobs.some(
-      (applied) =>
-        applied.title === job.title &&
-        applied.company === job.company &&
-        applied.location === job.location
+  const isAlreadyApplied = (job) =>
+    appliedJobs.some(
+      (a) => a.title === job.title && a.company === job.company && a.location === job.location
     );
-  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100">
-      <Nav
-          subtitle="Your AI preparation roadmap"
-          showBack={true}
-          backTo="/dashboard"
-          centerTitle={true}
-        />
+    <div className="jobs-page">
+      <Nav subtitle="Find your next role" showBack backTo="/dashboard" centerTitle />
 
-      <div className="max-w-7xl mx-auto px-6 pt-12 text-center">
-        <h1 className="text-4xl font-bold text-gray-900">
-          Job Recommendations
-        </h1>
-        <p className="text-gray-500 mt-3">
-          Search jobs based on your skills and preferred location
-        </p>
-      </div>
+      <main className="jobs-main">
+        <section className="jobs-hero">
+          <h1>Job Recommendations</h1>
+          <p>Search jobs by role and location to find matches</p>
+        </section>
 
-      <div className="max-w-5xl mx-auto px-6 py-10">
-        <div className="bg-white/90 backdrop-blur-xl p-6 rounded-3xl shadow-xl mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input
-              className="border p-4 rounded-xl outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Job role e.g. React Developer"
-            />
-
-            <input
-              className="border p-4 rounded-xl outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Country e.g. India"
-            />
-
-            <button
-              onClick={fetchJobs}
-              disabled={loading}
-              className="rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold shadow-lg hover:scale-[1.01] transition disabled:opacity-60"
-            >
-              {loading ? "Searching..." : "Search Jobs"}
-            </button>
-          </div>
+        <div className="search-bar">
+          <Search size={18} className="search-icon" />
+          <input
+            type="text"
+            placeholder="Job role, e.g. Frontend Developer"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && fetchJobs()}
+          />
+          <input
+            type="text"
+            className="search-separator"
+            placeholder="Location, e.g. Remote"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && fetchJobs()}
+          />
+          <button onClick={fetchJobs} disabled={loading} className="btn-search">
+            {loading ? "Searching..." : "Search"}
+          </button>
         </div>
 
-        <div className="grid gap-5">
-          {loading ? (
-            <p className="text-center text-gray-600">Fetching jobs...</p>
-          ) : jobs.length > 0 ? (
-            jobs.map((job, index) => {
-              const applied = isAlreadyApplied(job);
+        {error && <p className="jobs-error">{error}</p>}
 
-              return (
-                <div
-                  key={index}
-                  className="bg-white/90 backdrop-blur-xl p-6 rounded-3xl shadow-xl border border-white/60"
-                >
-                  <h2 className="text-xl font-bold text-indigo-700">
-                    {job.title || "No title"}
-                  </h2>
-
-                  <p className="text-gray-700 font-medium mt-1">
-                    {job.company || "Company not available"}
-                  </p>
-
-                  <p className="text-sm text-gray-500 mt-1">
-                    {job.location || "Location not available"}
-                  </p>
-
-                  <p className="mt-4 text-gray-600 leading-7">
-                    {job.description
-                      ? `${job.description.slice(0, 250)}...`
-                      : "No description available"}
-                  </p>
-
-                  <div className="flex flex-wrap gap-3 mt-5">
-                    {job.apply_link ? (
-                      <a
-                        href={job.apply_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 bg-green-600 text-white px-5 py-2 rounded-xl hover:bg-green-700 transition"
-                      >
-                        Apply Now <FaExternalLinkAlt size={13} />
-                      </a>
-                    ) : (
-                      <button
-                        disabled
-                        className="inline-block bg-gray-400 text-white px-5 py-2 rounded-xl cursor-not-allowed"
-                      >
-                        Link Not Available
-                      </button>
-                    )}
-
-                    <button
-                      type="button"
-                      disabled={applied}
-                      onClick={() => markAsApplied(job)}
-                      className={`inline-flex items-center gap-2 px-5 py-2 rounded-xl transition ${
-                        applied
-                          ? "bg-gray-400 text-white cursor-not-allowed"
-                          : "bg-indigo-600 text-white hover:bg-indigo-700"
-                      }`}
-                    >
-                      <FaCheckCircle />
-                      {applied ? "Applied" : "Mark Applied"}
-                    </button>
-                  </div>
+        <div className="jobs-grid">
+          {loading
+            ? Array.from({ length: 6 }).map((_, i) => <JobSkeleton key={i} />)
+            : jobs.length > 0
+            ? jobs.map((job, i) => (
+                <JobCard
+                  key={`${job.company}-${job.title}-${i}`}
+                  job={job}
+                  applied={isAlreadyApplied(job)}
+                  onApply={markAsApplied}
+                />
+              ))
+            : query || location ? (
+                <div className="jobs-empty">
+                  <p>No jobs found for that search.</p>
+                  <p>Try different keywords or a broader location.</p>
                 </div>
-              );
-            })
-          ) : (
-          
-              <p className="text-gray-600 text-center">
-                Search jobs by entering role and location.
-              </p>
-            
-          )}
+              ) : (
+                <div className="jobs-empty">
+                  <p>Enter a role and location above to see recommendations.</p>
+                </div>
+              )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }
-
-export default Jobs;
-
-{/* 
-        UpdatingUIChanges branch
-      */}

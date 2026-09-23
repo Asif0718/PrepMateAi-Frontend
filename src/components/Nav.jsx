@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  FaUserCircle,
-  FaBookOpen,
-  FaBriefcase,
-  FaSignOutAlt,
-  FaArrowLeft,
-} from "react-icons/fa";
+  UserCircle,
+  BookOpen,
+  Briefcase,
+  LogOut,
+  ArrowLeft,
+} from "lucide-react";
 
 function Nav({
   subtitle = "Resume analysis & preparation guide",
@@ -19,9 +19,6 @@ function Nav({
 
   const logout = () => {
     localStorage.clear();
-  
-    console.log("TOKEN AFTER LOGOUT:", localStorage.getItem("token"));
-  
     window.location.href = "/";
   };
 
@@ -33,9 +30,9 @@ function Nav({
             <button
               type="button"
               onClick={() => navigate(backTo)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white hover:bg-black transition"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition"
             >
-              <FaArrowLeft />
+              <ArrowLeft size={16} />
               Back
             </button>
           )}
@@ -65,7 +62,7 @@ function Nav({
             onClick={() => setShowProfile(!showProfile)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg hover:scale-105 transition"
           >
-            <FaUserCircle size={24} />
+            <UserCircle size={20} />
             Profile
           </button>
 
@@ -76,7 +73,7 @@ function Nav({
                 onClick={() => navigate("/prep-history")}
                 className="w-full flex items-center gap-3 text-left px-4 py-3 rounded-xl hover:bg-indigo-50 text-gray-800 font-medium transition"
               >
-                <FaBookOpen className="text-indigo-600" />
+                <BookOpen size={16} className="text-indigo-600" />
                 Prep History
               </button>
 
@@ -85,7 +82,7 @@ function Nav({
                 onClick={() => navigate("/applied-jobs")}
                 className="w-full flex items-center gap-3 text-left px-4 py-3 rounded-xl hover:bg-indigo-50 text-gray-800 font-medium transition"
               >
-                <FaBriefcase className="text-indigo-600" />
+                <Briefcase size={16} className="text-indigo-600" />
                 Applied Jobs
               </button>
 
@@ -94,7 +91,7 @@ function Nav({
                 onClick={logout}
                 className="w-full flex items-center gap-3 text-left px-4 py-3 rounded-xl hover:bg-red-50 text-red-600 font-medium transition"
               >
-                <FaSignOutAlt />
+                <LogOut size={16} />
                 Logout
               </button>
             </div>
