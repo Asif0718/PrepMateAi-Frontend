@@ -26,7 +26,7 @@ function AppliedJobs() {
     <div className="min-h-screen bg-gray-100 p-8">
       <button
         onClick={() => navigate("/jobs")}
-        className="mb-6 bg-gray-900 text-white px-4 py-2 rounded-xl"
+        className="mb-6 bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition"
       >
         ← Back
       </button>
