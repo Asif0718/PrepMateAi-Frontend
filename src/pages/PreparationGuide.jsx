@@ -421,7 +421,11 @@ function PreparationGuide() {
           )}
           <div className="mt-8 flex flex-wrap gap-3 print:hidden">
             {days.length > 0 && <a href="#plan" className="btn btn-primary">Start the 7-day plan</a>}
-            <Link to="/mock-interview" className="btn btn-secondary">
+            <Link
+              to="/mock-interview"
+              state={{ role: role || "", jobDescription: localStorage.getItem("preparationJobDescription") || "" }}
+              className="btn btn-secondary"
+            >
               <MessagesSquare size={16} /> Practise in a mock interview
             </Link>
             <button type="button" onClick={() => window.print()} className="btn btn-ghost">

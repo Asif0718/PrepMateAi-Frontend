@@ -27,8 +27,9 @@ function PrepHistory() {
       });
   }, [toast]);
 
-  const openGuide = (guide) => {
-    localStorage.setItem("preparationGuide", guide);
+  const openGuide = (item) => {
+    localStorage.setItem("preparationGuide", item.preparation_guide);
+    localStorage.setItem("preparationJobDescription", item.job_description || "");
     navigate("/preparation-guide");
   };
 
@@ -90,7 +91,7 @@ function PrepHistory() {
                   {item.job_description ? `, ${item.job_description.slice(0, 80)}` : ""}
                 </p>
               </div>
-              <button type="button" onClick={() => openGuide(item.preparation_guide)} className="btn btn-secondary btn-sm">
+              <button type="button" onClick={() => openGuide(item)} className="btn btn-secondary btn-sm">
                 Open guide
               </button>
               <button

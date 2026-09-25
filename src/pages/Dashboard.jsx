@@ -59,6 +59,7 @@ function Dashboard() {
       setLoading(true);
       const res = await API.post("/resume/upload", formData);
       localStorage.setItem("preparationGuide", res.data.preparation_guide);
+      localStorage.setItem("preparationJobDescription", jobDescription);
       toast.success("Your preparation guide is ready");
       navigate("/preparation-guide");
     } catch (err) {

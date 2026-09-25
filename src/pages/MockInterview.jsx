@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Loader2, Mic, MicOff, RotateCcw, Send } from "lucide-react";
 import API, { apiError } from "../api";
 import Nav from "../components/Nav";
@@ -25,9 +26,10 @@ function firstUnanswered(questions) {
 }
 
 function Setup({ onStart, onResume }) {
+  const { state } = useLocation();
   const [form, setForm] = useState({
-    role: "",
-    job_description: "",
+    role: state?.role || "",
+    job_description: state?.jobDescription || "",
     interview_type: "mixed",
     difficulty: "medium",
     num_questions: 5,
