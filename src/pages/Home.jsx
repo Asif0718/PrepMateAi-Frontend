@@ -4,9 +4,6 @@ import {
   FileText,
   Briefcase,
   BarChart3,
-  Rocket,
-  Target,
-  Trophy,
   Sparkles,
 } from "lucide-react";
 
