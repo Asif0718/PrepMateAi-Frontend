@@ -4,6 +4,8 @@ import API, { apiError } from "../api";
 import AuthLayout, { PasswordField } from "../components/AuthLayout";
 import { useToast } from "../components/toast-context";
 
+const TEST_ACCOUNT = { email: "admin@gmail.com", password: "admin" };
+
 function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -38,6 +40,17 @@ function Login() {
 
   return (
     <AuthLayout headline="Welcome back." subtext="Pick up your preparation where you left off.">
+      <button
+        type="button"
+        onClick={() => {
+          setForm(TEST_ACCOUNT);
+          setError("");
+        }}
+        className="chip absolute top-6 right-6 cursor-pointer text-ink transition-colors hover:border-ink"
+      >
+        Use test account
+      </button>
+
       <h2 className="text-3xl font-semibold">Sign in</h2>
       <p className="mt-2 text-graphite">Use the email you registered with.</p>
 

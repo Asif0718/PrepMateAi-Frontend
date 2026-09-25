@@ -44,7 +44,7 @@ export default function AuthLayout({ headline, subtext, children }) {
         </div>
       </aside>
 
-      <main className="flex items-center justify-center px-6 py-12">
+      <main className="relative flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
           <Link to="/" className="mb-10 block font-display text-2xl font-semibold md:hidden">
             PrepMate
