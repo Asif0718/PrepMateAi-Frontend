@@ -1,220 +1,182 @@
-import { useNavigate } from "react-router-dom";
-import {
-  Brain,
-  FileText,
-  Briefcase,
-  BarChart3,
-  Sparkles,
-} from "lucide-react";
+import { Link } from "react-router-dom";
+import { Check, Mic, Plus } from "lucide-react";
+import Reveal from "../components/Reveal";
+
+const HEADLINE = "Walk into placement season ready.";
+
+const STEPS = [
+  ["Upload your resume", "Add a PDF and paste the job description you are aiming for."],
+  ["Get a 7-day guide", "A day-by-day plan built from the gap between your resume and the role."],
+  ["Practise the interview", "Answer role-specific questions out loud or in text, and get each one scored."],
+  ["Apply and track", "Find matching jobs, tailor your resume, and move applications across your board."],
+];
+
+const STAGES = [
+  ["Applied", 6],
+  ["Interview", 2],
+  ["Offer", 1],
+];
 
 function Home() {
-  const navigate = useNavigate();
-
-  const features = [
-    {
-      title: "Resume Analysis",
-      description:
-        "AI-powered resume review with detailed insights and ATS optimization.",
-      icon: <FileText className="w-8 h-8 text-indigo-400" />,
-    },
-    {
-      title: "Preparation Guide",
-      description:
-        "Personalized interview roadmap based on your skills and target role.",
-      icon: <Brain className="w-8 h-8 text-purple-400" />,
-    },
-    {
-      title: "Job Recommendations",
-      description:
-        "Discover relevant opportunities tailored to your profile.",
-      icon: <Briefcase className="w-8 h-8 text-pink-400" />,
-    },
-    {
-      title: "Application Tracking",
-      description:
-        "Track all your applications and stay organized effortlessly.",
-      icon: <BarChart3 className="w-8 h-8 text-cyan-400" />,
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-[#0B1020] text-white overflow-x-hidden">
-      {/* Background Glow */}
-      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-indigo-600/20 blur-[150px] rounded-full"></div>
-      <div className="absolute right-0 top-20 w-[400px] h-[400px] bg-purple-600/20 blur-[150px] rounded-full"></div>
-
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 backdrop-blur-md bg-[#0B1020]/70 border-b border-white/10">
-        <div className="max-w-7xl mx-auto flex justify-between items-center px-8 py-5">
-          <h1 className="text-3xl font-bold">
-            <span className="text-indigo-500">Prep</span>
-            <span className="text-purple-400">Mate AI</span>
-          </h1>
-
-          <div className="hidden md:flex gap-10 text-gray-300">
-            <a href="#features" className="hover:text-white">
-              Features
-            </a>
-            <a href="#about" className="hover:text-white">
-              About
-            </a>
-            <a href="#future" className="hover:text-white">
-              Guides
-            </a>
-          </div>
-
-          <div className="flex gap-4">
-            <button
-              onClick={() => navigate("/login")}
-              className="px-6 py-2 rounded-xl border border-white/20 hover:bg-white/10"
-            >
-              Sign In
-            </button>
-
-            <button
-              onClick={() => navigate("/register")}
-              className="px-6 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 hover:scale-105 transition"
-            >
-              Get Started 🚀
-            </button>
+    <div className="overflow-x-clip">
+      <header className="sticky top-0 z-50 border-b border-line/70 bg-white/95 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+          <Link to="/" className="font-display text-xl font-semibold">
+            PrepMate
+          </Link>
+          <nav className="hidden gap-8 text-sm text-graphite md:flex">
+            <a href="#features" className="transition-colors hover:text-ink">Features</a>
+            <a href="#how-it-works" className="transition-colors hover:text-ink">How it works</a>
+          </nav>
+          <div className="flex gap-2">
+            <Link to="/login" className="btn btn-ghost btn-sm">Sign in</Link>
+            <Link to="/register" className="btn btn-primary btn-sm">Create account</Link>
           </div>
         </div>
-      </nav>
+      </header>
 
-      {/* Hero */}
-      <section className="max-w-7xl mx-auto px-8 py-24 grid lg:grid-cols-2 gap-16 items-center">
+      <section className="mx-auto grid min-h-[calc(100dvh-4rem)] max-w-7xl items-center gap-12 px-4 py-12 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:py-16">
         <div>
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 mb-8">
-            <Sparkles className="w-4 h-4 text-indigo-400" />
-            <span className="text-sm text-indigo-300">
-              AI-Powered Placement Prep
-            </span>
-          </div>
-
-          <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
-            Get <span className="text-indigo-500">Placement Ready</span>
-            <br />
-            in Record Time 🚀
+          <h1 className="text-5xl leading-[1.02] font-semibold tracking-[-0.035em] sm:text-6xl lg:text-7xl">
+            {HEADLINE.split(" ").map((word, i) => (
+              <span key={i} className="rise-line mr-[0.22em]">
+                <span style={{ "--i": i }}>{word}</span>
+              </span>
+            ))}
           </h1>
-
-          <p className="mt-8 text-xl text-gray-400 leading-relaxed">
-            Upload your resume, generate personalized preparation guides,
-            discover jobs, and prepare smarter with AI.
+          <p
+            className="page-enter mt-7 max-w-md text-lg leading-relaxed text-graphite"
+            style={{ animationDelay: "450ms" }}
+          >
+            Turn your resume and a job description into a prep plan, mock interviews and a tracked job search.
           </p>
-
-          <div className="mt-10 flex flex-wrap gap-5">
-            <button
-              onClick={() => navigate("/register")}
-              className="px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 font-semibold hover:scale-105 transition"
-            >
-              Start Your Journey →
-            </button>
-
-            <button
-              onClick={() => navigate("/login")}
-              className="px-8 py-4 rounded-2xl border border-white/10 hover:bg-white/10"
-            >
-              Get AI Assessment ✨
-            </button>
-          </div>
-
-          <div className="flex gap-10 mt-12">
-          <div>
-              <h2 className="text-4xl font-bold text-indigo-400">
-                AI
-              </h2>
-              <p className="text-gray-400">Powered Guidance</p>
-            </div>
-
-            <div>
-              <h2 className="text-4xl font-bold text-green-400">
-                4+
-              </h2>
-              <p className="text-gray-400">Core Features</p>
-            </div>
-
-            <div>
-              <h2 className="text-4xl font-bold text-purple-400">
-                24/7
-              </h2>
-              <p className="text-gray-400">Career Assistant</p>
-            </div>
+          <div className="page-enter mt-9 flex flex-wrap gap-3" style={{ animationDelay: "550ms" }}>
+            <Link to="/register" className="btn btn-primary btn-lg">Create account</Link>
+            <Link to="/login" className="btn btn-secondary btn-lg">Sign in</Link>
           </div>
         </div>
 
-        {/* Hero Image */}
-        <div>
-          <img
-            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f"
-            alt="students"
-            className="rounded-3xl shadow-2xl border border-white/10"
-          />
+        <div className="relative aspect-[16/10] overflow-hidden rounded-[20px] bg-neutral-200 lg:aspect-[4/5]">
+          <div className="settle size-full">
+            <img
+              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1400&q=75"
+              alt="Students preparing together at a laptop"
+              fetchPriority="high"
+              className="drift size-full object-cover"
+            />
+          </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section
-        id="features"
-        className="max-w-7xl mx-auto px-8 py-20"
-      >
-        <h2 className="text-5xl font-bold text-center mb-5">
-          Features That Actually Work
-        </h2>
+      <section id="features" className="mx-auto max-w-7xl px-4 py-24 sm:px-6 md:py-32">
+        <Reveal as="h2" className="max-w-2xl text-4xl leading-[1.05] font-semibold md:text-5xl">
+          Everything between your resume and the offer letter.
+        </Reveal>
 
-        <p className="text-center text-gray-400 max-w-3xl mx-auto mb-16">
-          Smart AI-driven tools designed to accelerate your placement
-          journey.
-        </p>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-md hover:-translate-y-2 hover:border-indigo-500 transition duration-300"
-            >
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center mb-6">
-                {feature.icon}
-              </div>
-
-              <h3 className="text-2xl font-bold mb-4">
-                {feature.title}
-              </h3>
-
-              <p className="text-gray-400">
-                {feature.description}
+        <div className="mt-14 grid gap-4 md:grid-cols-6">
+          <Reveal className="flex flex-col justify-between gap-10 rounded-[20px] bg-ink p-8 text-white md:col-span-4 md:p-10">
+            <div className="flex items-center justify-between">
+              <h3 className="text-2xl font-semibold">Mock interviews</h3>
+              <Mic size={22} className="text-white/60" />
+            </div>
+            <div className="grid gap-6 sm:grid-cols-[auto_1fr] sm:items-end">
+              <p className="font-display text-7xl leading-none font-semibold md:text-8xl">
+                7<span className="text-3xl text-white/50">/10</span>
+              </p>
+              <p className="max-w-sm text-white/70">
+                Every answer gets a score, what worked, what to improve and a stronger sample answer.
               </p>
             </div>
-          ))}
+          </Reveal>
+
+          <Reveal index={1} className="card flex flex-col gap-6 p-8 md:col-span-2">
+            <h3 className="text-2xl font-semibold">Job matching</h3>
+            <p className="text-graphite">Each listing shows how well your skills fit it.</p>
+            <div className="mt-auto flex flex-wrap gap-2">
+              <span className="chip chip-ink">68% match</span>
+              <span className="chip"><Check size={12} /> React</span>
+              <span className="chip"><Check size={12} /> SQL</span>
+              <span className="chip"><Plus size={12} /> Docker</span>
+            </div>
+          </Reveal>
+
+          <Reveal index={2} className="flex flex-col gap-6 rounded-[20px] bg-neutral-100 p-8 md:col-span-2">
+            <h3 className="text-2xl font-semibold">Preparation guide</h3>
+            <ol className="mt-auto space-y-3 text-sm">
+              {["Revise REST and auth basics", "Build one project feature", "Practise SQL joins"].map((t, i) => (
+                <li key={t} className="flex gap-3">
+                  <span className="w-12 shrink-0 font-display font-semibold whitespace-nowrap">Day {i + 1}</span>
+                  <span className="text-graphite">{t}</span>
+                </li>
+              ))}
+            </ol>
+          </Reveal>
+
+          <Reveal index={3} className="card flex flex-col gap-8 p-8 md:col-span-4 md:p-10">
+            <div>
+              <h3 className="text-2xl font-semibold">Application tracker</h3>
+              <p className="mt-2 max-w-md text-graphite">
+                Drag applications between stages and get an email when a follow-up is due.
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {STAGES.map(([stage, count]) => (
+                <div key={stage} className="rounded-xl border border-line p-4">
+                  <p className="text-sm text-mute">{stage}</p>
+                  <p className="mt-1 font-display text-3xl font-semibold">{count}</p>
+                </div>
+              ))}
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* Coming Soon */}
-      <section
-        id="future"
-        className="max-w-6xl mx-auto px-8 py-20"
-      >
-        <h2 className="text-5xl font-bold text-center mb-12">
-          Coming Soon 🚀
-        </h2>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-white/10 rounded-2xl p-8">
-            ATS Resume Analyzer
+      <section id="how-it-works" className="bg-ink text-white">
+        <div className="mx-auto grid max-w-7xl gap-14 px-4 py-24 sm:px-6 md:py-32 lg:grid-cols-[0.8fr_1.2fr]">
+          <div className="lg:sticky lg:top-28 lg:self-start">
+            <Reveal as="h2" className="text-4xl leading-[1.05] font-semibold md:text-5xl">
+              How it works
+            </Reveal>
+            <Reveal as="p" index={1} className="mt-5 max-w-sm text-lg text-white/60">
+              Four steps from a blank page to a prepared interview.
+            </Reveal>
           </div>
 
-          <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-white/10 rounded-2xl p-8">
-            LangGraph Multi-Agent Workflows
-          </div>
-
-          <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-white/10 rounded-2xl p-8">
-            RAG-based Interview Preparation
-          </div>
+          <ol>
+            {STEPS.map(([title, body], i) => (
+              <Reveal
+                as="li"
+                key={title}
+                className="grid grid-cols-[3.5rem_1fr] gap-4 border-t border-white/15 py-10 first:border-t-0 first:pt-0 md:grid-cols-[5rem_1fr]"
+              >
+                <span className="font-display text-4xl font-semibold text-white/35 md:text-5xl">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <h3 className="text-2xl font-semibold md:text-3xl">{title}</h3>
+                  <p className="mt-3 max-w-md text-white/60">{body}</p>
+                </div>
+              </Reveal>
+            ))}
+          </ol>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-white/10 py-8 text-center text-gray-400">
-        © 2026 PrepMate AI • Built by Shaik Mahammed Asif
+      <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6 md:py-32">
+        <div className="grow-in flex flex-col items-start gap-8 rounded-[20px] border border-line p-8 md:flex-row md:items-center md:justify-between md:p-14">
+          <h2 className="max-w-xl text-4xl leading-[1.05] font-semibold md:text-5xl">
+            Start preparing for your next interview.
+          </h2>
+          <Link to="/register" className="btn btn-primary btn-lg shrink-0">Create account</Link>
+        </div>
+      </section>
+
+      <footer className="border-t border-line">
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-8 text-sm text-mute sm:flex-row sm:justify-between sm:px-6">
+          <p>© 2026 PrepMate AI</p>
+          <p>Built by Shaik Mahammed Asif</p>
+        </div>
       </footer>
     </div>
   );

@@ -2,15 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { Loader2, Mic, MicOff, RotateCcw, Send } from "lucide-react";
 import API, { apiError } from "../api";
 import Nav from "../components/Nav";
+import { useToast } from "../components/toast-context";
 
 const SpeechRecognition =
   typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
 
-const card = "bg-white/85 backdrop-blur-xl rounded-3xl shadow-xl p-6 sm:p-8";
+const card = "card p-6 sm:p-8";
 const input =
-  "w-full px-4 py-3 rounded-xl border border-gray-200 bg-white outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition";
+  "field";
 const primaryBtn =
-  "inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold shadow-lg hover:scale-[1.02] active:scale-[0.98] transition disabled:opacity-60 disabled:hover:scale-100";
+  "btn btn-primary btn-lg";
 
 function scoreColor(score) {
   if (score >= 7) return "text-emerald-600";
@@ -61,27 +62,27 @@ function Setup({ onStart, onResume }) {
     <div className="grid lg:grid-cols-3 gap-8">
       <form onSubmit={start} className={`${card} lg:col-span-2 space-y-5`}>
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">AI Mock Interview</h2>
-          <p className="text-gray-500 mt-2">
+          <h1 className="text-4xl font-semibold md:text-5xl">Mock interview</h1>
+          <p className="mt-3 text-graphite">
             Answer one question at a time, by typing or speaking, and get a score with feedback on each answer.
           </p>
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Role</label>
+          <label className="label mb-2">Role</label>
           <input
             required
             minLength={2}
             value={form.role}
             onChange={set("role")}
-            placeholder="e.g. MERN Stack Developer"
+            placeholder="MERN stack developer"
             className={input}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Job description <span className="font-normal text-gray-400">(optional)</span>
+          <label className="label mb-2">
+            Job description <span className="font-normal text-mute">(optional)</span>
           </label>
           <textarea
             rows={3}
@@ -94,15 +95,15 @@ function Setup({ onStart, onResume }) {
 
         <div className="grid sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Type</label>
+            <label className="label mb-2">Type</label>
             <select value={form.interview_type} onChange={set("interview_type")} className={input}>
               <option value="mixed">Mixed</option>
               <option value="technical">Technical</option>
-              <option value="hr">HR / Behavioural</option>
+              <option value="hr">HR and behavioural</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Difficulty</label>
+            <label className="label mb-2">Difficulty</label>
             <select value={form.difficulty} onChange={set("difficulty")} className={input}>
               <option value="easy">Easy</option>
               <option value="medium">Medium</option>
@@ -110,14 +111,14 @@ function Setup({ onStart, onResume }) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Questions</label>
+            <label className="label mb-2">Questions</label>
             <select value={form.num_questions} onChange={set("num_questions")} className={input}>
               {[3, 5, 7, 10].map((n) => <option key={n} value={n}>{n}</option>)}
             </select>
           </div>
         </div>
 
-        {error && <p className="text-red-600 bg-red-50 rounded-xl p-3 text-sm">{error}</p>}
+        {error && <p role="alert" className="text-sm font-medium text-red-600">{error}</p>}
 
         <button type="submit" disabled={loading} className={`${primaryBtn} w-full`}>
           {loading ? <><Loader2 size={18} className="animate-spin" /> Preparing questions...</> : "Start interview"}
@@ -125,25 +126,25 @@ function Setup({ onStart, onResume }) {
       </form>
 
       <div className={`${card} h-fit`}>
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Past interviews</h3>
-        {sessions.length === 0 && <p className="text-sm text-gray-500">No interviews yet.</p>}
+        <h2 className="mb-4 text-xl font-semibold">Past interviews</h2>
+        {sessions.length === 0 && <p className="text-sm text-graphite">Your finished and in-progress interviews will show up here.</p>}
         <div className="space-y-2">
           {sessions.map((s) => (
             <button
               key={s.id}
               type="button"
               onClick={() => onResume(s.id)}
-              className="w-full text-left px-4 py-3 rounded-xl border border-gray-100 hover:bg-indigo-50 transition"
+              className="w-full rounded-xl border border-line px-4 py-3 text-left transition-colors hover:border-ink"
             >
               <div className="flex justify-between gap-2">
-                <span className="font-semibold text-gray-800 truncate">{s.role}</span>
-                <span className="text-sm font-bold text-indigo-600 shrink-0">
+                <span className="truncate font-semibold">{s.role}</span>
+                <span className="shrink-0 font-display text-sm font-semibold">
                   {s.overall_score != null ? `${s.overall_score}%` : `${s.answered}/${s.total}`}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                {new Date(s.created_at + "Z").toLocaleDateString()} · {s.interview_type} · {s.difficulty}
-                {s.readiness ? ` · ${s.readiness}` : " · in progress"}
+              <p className="mt-1 text-xs text-mute capitalize">
+                {new Date(s.created_at + "Z").toLocaleDateString()}, {s.interview_type}, {s.difficulty}
+                {s.readiness ? `, ${s.readiness}` : ", in progress"}
               </p>
             </button>
           ))}
@@ -155,15 +156,15 @@ function Setup({ onStart, onResume }) {
 
 function Evaluation({ evaluation }) {
   return (
-    <div className="mt-6 space-y-4 border-t border-gray-100 pt-6">
+    <div className="dialog mt-6 space-y-4 border-t border-line pt-6">
       <div className="flex items-baseline gap-3">
-        <span className={`text-4xl font-bold ${scoreColor(evaluation.score)}`}>{evaluation.score}/10</span>
-        <p className="text-gray-700">{evaluation.feedback}</p>
+        <span className={`shrink-0 font-display text-5xl font-semibold ${scoreColor(evaluation.score)}`}>{evaluation.score}<span className="text-xl text-mute">/10</span></span>
+        <p className="text-graphite">{evaluation.feedback}</p>
       </div>
       <div className="grid sm:grid-cols-2 gap-4 text-sm">
         {evaluation.strengths.length > 0 && (
           <div className="bg-emerald-50 rounded-xl p-4">
-            <h4 className="font-semibold text-emerald-800 mb-2">Strengths</h4>
+            <h4 className="mb-2 font-sans text-sm font-semibold tracking-normal text-emerald-800">Strengths</h4>
             <ul className="list-disc ml-4 space-y-1 text-emerald-900">
               {evaluation.strengths.map((s, i) => <li key={i}>{s}</li>)}
             </ul>
@@ -171,7 +172,7 @@ function Evaluation({ evaluation }) {
         )}
         {evaluation.improvements.length > 0 && (
           <div className="bg-amber-50 rounded-xl p-4">
-            <h4 className="font-semibold text-amber-800 mb-2">Improve</h4>
+            <h4 className="mb-2 font-sans text-sm font-semibold tracking-normal text-amber-800">Improve</h4>
             <ul className="list-disc ml-4 space-y-1 text-amber-900">
               {evaluation.improvements.map((s, i) => <li key={i}>{s}</li>)}
             </ul>
@@ -179,9 +180,9 @@ function Evaluation({ evaluation }) {
         )}
       </div>
       {evaluation.ideal_answer && (
-        <div className="bg-indigo-50 rounded-xl p-4 text-sm">
-          <h4 className="font-semibold text-indigo-800 mb-2">Model answer</h4>
-          <p className="text-gray-800 leading-6">{evaluation.ideal_answer}</p>
+        <div className="rounded-xl bg-ink p-4 text-sm text-white">
+          <h4 className="mb-2 font-sans text-sm font-semibold tracking-normal">Model answer</h4>
+          <p className="leading-6 text-white/80">{evaluation.ideal_answer}</p>
         </div>
       )}
     </div>
@@ -258,23 +259,23 @@ function Interview({ session, setSession, onFinish }) {
 
   return (
     <div className={`${card} max-w-3xl mx-auto`}>
-      <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
+      <div className="mb-3 flex items-center justify-between text-sm text-mute">
         <span>Question {index + 1} of {session.questions.length}</span>
-        <span className="capitalize">{question.type}{question.topic ? ` · ${question.topic}` : ""}</span>
+        <span className="capitalize">{question.type}{question.topic ? `, ${question.topic}` : ""}</span>
       </div>
-      <div className="h-1.5 bg-gray-100 rounded-full mb-6">
+      <div className="mb-8 h-1 rounded-full bg-neutral-100">
         <div
-          className="h-full bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full transition-all"
+          className="h-full rounded-full bg-ink transition-[width] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
           style={{ width: `${(100 * (index + (question.evaluation ? 1 : 0))) / session.questions.length}%` }}
         />
       </div>
 
-      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 leading-snug">{question.question}</h2>
+      <h2 key={index} className="page-enter text-2xl leading-snug font-semibold sm:text-3xl">{question.question}</h2>
 
       {question.evaluation ? (
         <>
           {question.answer && (
-            <p className="mt-4 text-sm text-gray-500 bg-gray-50 rounded-xl p-3 whitespace-pre-wrap">{question.answer}</p>
+            <p className="mt-4 rounded-xl bg-neutral-100 p-3 text-sm whitespace-pre-wrap text-graphite">{question.answer}</p>
           )}
           <Evaluation evaluation={question.evaluation} />
           <button type="button" onClick={next} className={`${primaryBtn} mt-6 w-full`}>
@@ -287,17 +288,17 @@ function Interview({ session, setSession, onFinish }) {
             rows={7}
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
-            placeholder={SpeechRecognition ? "Type your answer, or press the mic and speak..." : "Type your answer..."}
+            placeholder={SpeechRecognition ? "Type your answer, or press Speak and answer out loud" : "Type your answer"}
             className={`${input} mt-6 resize-y`}
           />
-          {error && <p className="text-red-600 bg-red-50 rounded-xl p-3 text-sm mt-3">{error}</p>}
+          {error && <p role="alert" className="mt-3 text-sm font-medium text-red-600">{error}</p>}
           <div className="flex gap-3 mt-4">
             {SpeechRecognition && (
               <button
                 type="button"
                 onClick={toggleMic}
-                className={`inline-flex items-center gap-2 px-4 py-3 rounded-xl border font-semibold transition ${
-                  listening ? "bg-red-50 border-red-200 text-red-600 animate-pulse" : "border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                className={`btn btn-lg ${
+                  listening ? "bg-red-600 text-white animate-pulse" : "btn-secondary"
                 }`}
               >
                 {listening ? <MicOff size={18} /> : <Mic size={18} />}
@@ -322,20 +323,20 @@ function Interview({ session, setSession, onFinish }) {
 function Summary({ session, onRestart }) {
   return (
     <div className={`${card} max-w-3xl mx-auto`}>
-      <p className="text-sm text-gray-500">{session.role} · {session.interview_type} · {session.difficulty}</p>
+      <p className="text-sm text-mute capitalize">{session.role}, {session.interview_type}, {session.difficulty}</p>
       <div className="flex items-end gap-4 mt-2">
-        <span className="text-6xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+        <span className="font-display text-7xl leading-none font-semibold">
           {session.overall_score}%
         </span>
-        <span className="text-xl font-semibold text-gray-700 mb-2">{session.readiness}</span>
+        <span className="mb-1 text-xl font-semibold text-graphite">{session.readiness}</span>
       </div>
 
       <div className="mt-8 space-y-3">
         {session.questions.map((q, i) => (
-          <details key={i} className="border border-gray-100 rounded-xl p-4">
-            <summary className="cursor-pointer flex justify-between gap-4">
-              <span className="text-gray-800 font-medium">{i + 1}. {q.question}</span>
-              <span className={`font-bold shrink-0 ${scoreColor(q.evaluation?.score ?? 0)}`}>
+          <details key={i} className="rounded-xl border border-line p-4 transition-colors open:border-ink">
+            <summary className="flex cursor-pointer justify-between gap-4">
+              <span className="font-medium">{i + 1}. {q.question}</span>
+              <span className={`shrink-0 font-display font-semibold ${scoreColor(q.evaluation?.score ?? 0)}`}>
                 {q.evaluation?.score ?? "-"}/10
               </span>
             </summary>
@@ -345,7 +346,7 @@ function Summary({ session, onRestart }) {
       </div>
 
       <button type="button" onClick={onRestart} className={`${primaryBtn} mt-8 w-full`}>
-        <RotateCcw size={16} /> Practice again
+        <RotateCcw size={16} /> Practise again
       </button>
     </div>
   );
@@ -354,11 +355,16 @@ function Summary({ session, onRestart }) {
 export default function MockInterview() {
   const [session, setSession] = useState(null);
   const [showSummary, setShowSummary] = useState(false);
+  const toast = useToast();
 
   const resume = async (id) => {
-    const res = await API.get(`/interview/${id}`);
-    setSession(res.data);
-    setShowSummary(res.data.status === "completed");
+    try {
+      const res = await API.get(`/interview/${id}`);
+      setSession(res.data);
+      setShowSummary(res.data.status === "completed");
+    } catch (err) {
+      toast.error(apiError(err, "Could not open this interview."));
+    }
   };
 
   const restart = () => {
@@ -367,15 +373,15 @@ export default function MockInterview() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100">
-      <Nav subtitle="Practice interviews with instant feedback" showBack backTo="/dashboard" centerTitle />
-      <div className="max-w-7xl mx-auto px-6 py-12">
+    <div className="min-h-[100dvh]">
+      <Nav />
+      <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 md:py-16">
         {!session && <Setup onStart={setSession} onResume={resume} />}
         {session && !showSummary && (
           <Interview key={session.id} session={session} setSession={setSession} onFinish={() => setShowSummary(true)} />
         )}
         {session && showSummary && <Summary session={session} onRestart={restart} />}
-      </div>
+      </main>
     </div>
   );
 }

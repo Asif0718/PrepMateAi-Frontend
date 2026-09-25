@@ -1,114 +1,49 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  UserCircle,
-  BookOpen,
-  Briefcase,
-  LogOut,
-  ArrowLeft,
-  MessagesSquare,
-} from "lucide-react";
+import { Link, NavLink } from "react-router-dom";
+import { LogOut } from "lucide-react";
 
-function Nav({
-  subtitle = "Resume analysis & preparation guide",
-  showBack = false,
-  backTo = "/dashboard",
-  centerTitle = false,
-}) {
-  const [showProfile, setShowProfile] = useState(false);
-  const navigate = useNavigate();
+const LINKS = [
+  ["/dashboard", "Dashboard"],
+  ["/jobs", "Jobs"],
+  ["/mock-interview", "Mock interview"],
+  ["/applied-jobs", "Tracker"],
+  ["/prep-history", "History"],
+];
 
+function Nav() {
   const logout = () => {
     localStorage.clear();
     window.location.href = "/";
   };
 
   return (
-    <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-white/50 shadow-sm">
-      <div className="relative max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          {showBack && (
-            <button
-              type="button"
-              onClick={() => navigate(backTo)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition"
+    <header className="sticky top-0 z-50 border-b border-line bg-white/80 backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6">
+        <Link to="/dashboard" className="shrink-0 font-display text-xl font-semibold">
+          PrepMate
+        </Link>
+
+        <nav className="-mx-1 flex flex-1 gap-1 overflow-x-auto px-1 [scrollbar-width:none]">
+          {LINKS.map(([to, label]) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                `shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium whitespace-nowrap transition-colors ${
+                  isActive ? "bg-ink text-white" : "text-graphite hover:bg-neutral-100 hover:text-ink"
+                }`
+              }
             >
-              <ArrowLeft size={16} />
-              Back
-            </button>
-          )}
+              {label}
+            </NavLink>
+          ))}
+        </nav>
 
-          {!centerTitle && (
-            <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                AI Placement Assistant
-              </h2>
-              <p className="text-sm text-gray-500">{subtitle}</p>
-            </div>
-          )}
-        </div>
-
-        {centerTitle && (
-          <div className="absolute left-1/2 -translate-x-1/2 text-center">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              AI Placement Assistant
-            </h2>
-            <p className="text-sm text-gray-500">{subtitle}</p>
-          </div>
-        )}
-
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setShowProfile(!showProfile)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg hover:scale-105 transition"
-          >
-            <UserCircle size={20} />
-            Profile
-          </button>
-
-          {showProfile && (
-            <div className="absolute right-0 mt-4 w-60 bg-white rounded-2xl shadow-2xl border border-gray-100 p-3">
-              <button
-                type="button"
-                onClick={() => navigate("/prep-history")}
-                className="w-full flex items-center gap-3 text-left px-4 py-3 rounded-xl hover:bg-indigo-50 text-gray-800 font-medium transition"
-              >
-                <BookOpen size={16} className="text-indigo-600" />
-                Prep History
-              </button>
-
-              <button
-                type="button"
-                onClick={() => navigate("/applied-jobs")}
-                className="w-full flex items-center gap-3 text-left px-4 py-3 rounded-xl hover:bg-indigo-50 text-gray-800 font-medium transition"
-              >
-                <Briefcase size={16} className="text-indigo-600" />
-                Application Tracker
-              </button>
-
-              <button
-                type="button"
-                onClick={() => navigate("/mock-interview")}
-                className="w-full flex items-center gap-3 text-left px-4 py-3 rounded-xl hover:bg-indigo-50 text-gray-800 font-medium transition"
-              >
-                <MessagesSquare size={16} className="text-indigo-600" />
-                Mock Interview
-              </button>
-
-              <button
-                type="button"
-                onClick={logout}
-                className="w-full flex items-center gap-3 text-left px-4 py-3 rounded-xl hover:bg-red-50 text-red-600 font-medium transition"
-              >
-                <LogOut size={16} />
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
+        <button type="button" onClick={logout} className="btn btn-ghost btn-sm shrink-0">
+          <LogOut size={15} />
+          <span className="hidden sm:inline">Log out</span>
+        </button>
       </div>
-    </div>
+    </header>
   );
 }
 

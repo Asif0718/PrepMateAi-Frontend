@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -12,6 +12,7 @@ import AppliedJobs from "./pages/AppliedJobs";
 import MockInterview from "./pages/MockInterview";
 
 function App() {
+  const { pathname } = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(
     !!localStorage.getItem("token")
   );
@@ -31,6 +32,7 @@ function App() {
   }, []);
 
   return (
+    <div key={pathname} className="page-enter">
     <Routes>
       {/* Public Home Page */}
       <Route path="/" element={<Home />} />
@@ -87,6 +89,7 @@ function App() {
         }
       />
     </Routes>
+    </div>
   );
 }
 

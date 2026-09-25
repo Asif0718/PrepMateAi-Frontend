@@ -3,7 +3,9 @@ import { Link } from "react-router-dom";
 import API, { apiError } from "../api";
 import Nav from "../components/Nav";
 import TailorModal from "../components/TailorModal";
-import { ExternalLink, CheckCircle2, MapPin, Building2, Clock, Search, Wand2 } from "lucide-react";
+import { ExternalLink, CheckCircle2, MapPin, Building2, Clock, Search, Wand2, Check, Plus } from "lucide-react";
+import Reveal from "../components/Reveal";
+import { useToast } from "../components/toast-context";
 
 function matchColor(score) {
   if (score >= 70) return "bg-emerald-50 text-emerald-700 border-emerald-200";
@@ -11,11 +13,11 @@ function matchColor(score) {
   return "bg-red-50 text-red-700 border-red-200";
 }
 
-function JobCard({ job, applied, onApply, onTailor, canTailor }) {
+function JobCard({ job, index, applied, onApply, onTailor, canTailor }) {
   const match = job.match;
 
   return (
-    <article className="job-card">
+    <Reveal as="article" index={index % 3} className="job-card card card-hover">
       <div className="job-card-header">
         <div className="job-card-icon">
           <Building2 size={18} />
@@ -27,7 +29,7 @@ function JobCard({ job, applied, onApply, onTailor, canTailor }) {
         {match && (
           <span
             title="How many of this job's skills are on your resume"
-            className={`shrink-0 text-xs font-bold px-2 py-1 rounded-lg border ${matchColor(match.score)}`}
+            className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${matchColor(match.score)}`}
           >
             {match.score}% match
           </span>
@@ -35,13 +37,13 @@ function JobCard({ job, applied, onApply, onTailor, canTailor }) {
       </div>
       <div className="job-card-details">
         {job.location && (
-          <span className="job-card-tag">
+          <span className="chip">
             <MapPin size={13} />
             {job.location}
           </span>
         )}
         {job.type && (
-          <span className="job-card-tag">
+          <span className="chip">
             <Clock size={13} />
             {job.type}
           </span>
@@ -55,12 +57,12 @@ function JobCard({ job, applied, onApply, onTailor, canTailor }) {
         </p>
       )}
       {match && (match.matched.length > 0 || match.missing.length > 0) && (
-        <div className="flex flex-wrap gap-1 text-[11px]">
+        <div className="flex flex-wrap gap-1.5">
           {match.matched.slice(0, 5).map((s) => (
-            <span key={s} className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">✓ {s}</span>
+            <span key={s} className="chip border-ink text-ink"><Check size={11} /> {s}</span>
           ))}
           {match.missing.slice(0, 4).map((s) => (
-            <span key={s} className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">+ {s}</span>
+            <span key={s} className="chip border-dashed text-mute"><Plus size={11} /> {s}</span>
           ))}
         </div>
       )}
@@ -70,43 +72,43 @@ function JobCard({ job, applied, onApply, onTailor, canTailor }) {
             href={job.apply_link}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-apply"
+            className="btn btn-primary btn-sm"
           >
             Apply <ExternalLink size={14} />
           </a>
         ) : (
-          <span className="btn-disabled">No link</span>
+          <span className="btn btn-sm cursor-default bg-neutral-100 text-mute">No link</span>
         )}
         <button
           type="button"
           disabled={applied}
           onClick={() => onApply(job)}
-          className={applied ? "btn-applied" : "btn-mark"}
+          className={`btn btn-sm ${applied ? "bg-neutral-100 text-graphite" : "btn-secondary"}`}
         >
           <CheckCircle2 size={14} />
           {applied ? "Applied" : "Mark"}
         </button>
         {canTailor && job.description && (
-          <button type="button" onClick={() => onTailor(job)} className="btn-mark">
+          <button type="button" onClick={() => onTailor(job)} className="btn btn-secondary btn-sm">
             <Wand2 size={14} />
             Tailor
           </button>
         )}
       </div>
-    </article>
+    </Reveal>
   );
 }
 
 function JobSkeleton() {
   return (
-    <div className="job-card job-card-skeleton">
-      <div className="skel-line skel-title" />
-      <div className="skel-line skel-company" />
-      <div className="skel-line skel-desc" />
-      <div className="skel-line skel-desc-short" />
+    <div className="job-card job-card-skeleton card">
+      <div className="skeleton skel-line skel-title" />
+      <div className="skeleton skel-line skel-company" />
+      <div className="skeleton skel-line skel-desc" />
+      <div className="skeleton skel-line skel-desc-short" />
       <div className="job-card-actions">
-        <div className="skel-btn" />
-        <div className="skel-btn" />
+        <div className="skeleton skel-btn" />
+        <div className="skeleton skel-btn" />
       </div>
     </div>
   );
@@ -121,6 +123,7 @@ export default function Jobs() {
   const [error, setError] = useState(null);
   const [hasResume, setHasResume] = useState(null);
   const [tailorJob, setTailorJob] = useState(null);
+  const toast = useToast();
 
   useEffect(() => {
     API.get("/jobs/applied")
@@ -130,7 +133,7 @@ export default function Jobs() {
 
   const fetchJobs = async () => {
     if (!query.trim() || !location.trim()) {
-      setError("Please enter job role and location");
+      setError("Enter a job role and a location to search.");
       return;
     }
     setError(null);
@@ -155,8 +158,9 @@ export default function Jobs() {
         apply_link: job.apply_link,
       });
       setAppliedJobs((prev) => [res.data.job, ...prev]);
+      toast.success("Added to your tracker");
     } catch {
-      alert("Failed to mark as applied");
+      toast.error("Could not add this job to your tracker.");
     }
   };
 
@@ -166,13 +170,13 @@ export default function Jobs() {
     );
 
   return (
-    <div className="jobs-page">
-      <Nav subtitle="Find your next role" showBack backTo="/dashboard" centerTitle />
+    <div className="min-h-[100dvh]">
+      <Nav />
 
-      <main className="jobs-main">
-        <section className="jobs-hero">
-          <h1>Job Recommendations</h1>
-          <p>Search jobs by role and location to find matches</p>
+      <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 md:py-16">
+        <section className="mb-10">
+          <h1 className="text-4xl font-semibold md:text-5xl">Find jobs</h1>
+          <p className="mt-3 text-lg text-graphite">Search by role and location. Each result shows how well it matches your resume.</p>
         </section>
 
         <div className="search-bar">
@@ -192,7 +196,7 @@ export default function Jobs() {
             onChange={(e) => setLocation(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && fetchJobs()}
           />
-          <button onClick={fetchJobs} disabled={loading} className="btn-search">
+          <button onClick={fetchJobs} disabled={loading} className="btn btn-primary">
             {loading ? "Searching..." : "Search"}
           </button>
         </div>
@@ -200,8 +204,8 @@ export default function Jobs() {
         {error && <p className="jobs-error">{error}</p>}
 
         {hasResume === false && jobs.length > 0 && (
-          <p className="mb-4 text-sm bg-indigo-50 text-indigo-700 rounded-xl px-4 py-3">
-            <Link to="/dashboard" className="font-semibold underline">Upload your resume</Link>{" "}
+          <p className="mb-6 rounded-xl bg-neutral-100 px-4 py-3 text-sm text-graphite">
+            <Link to="/dashboard" className="font-semibold text-ink underline underline-offset-4">Upload your resume</Link>{" "}
             to see your match score for each job and tailor your resume to it.
           </p>
         )}
@@ -214,6 +218,7 @@ export default function Jobs() {
                 <JobCard
                   key={`${job.company}-${job.title}-${i}`}
                   job={job}
+                  index={i}
                   applied={isAlreadyApplied(job)}
                   onApply={markAsApplied}
                   onTailor={setTailorJob}

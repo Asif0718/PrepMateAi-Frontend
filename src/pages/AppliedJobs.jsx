@@ -3,13 +3,15 @@ import { Link } from "react-router-dom";
 import { Bell, CalendarDays, ExternalLink, StickyNote, Trash2 } from "lucide-react";
 import API from "../api";
 import Nav from "../components/Nav";
+import Reveal from "../components/Reveal";
+import { useToast } from "../components/toast-context";
 
 const STAGES = [
-  { id: "applied", label: "Applied", color: "border-t-indigo-500" },
-  { id: "online_test", label: "Online Test", color: "border-t-sky-500" },
-  { id: "interview", label: "Interview", color: "border-t-amber-500" },
-  { id: "offer", label: "Offer", color: "border-t-emerald-500" },
-  { id: "rejected", label: "Rejected", color: "border-t-gray-400" },
+  { id: "applied", label: "Applied" },
+  { id: "online_test", label: "Online test" },
+  { id: "interview", label: "Interview" },
+  { id: "offer", label: "Offer" },
+  { id: "rejected", label: "Rejected" },
 ];
 
 const FOLLOW_UP_DAYS = 7;
@@ -40,20 +42,27 @@ function JobCard({ job, onUpdate, onDelete }) {
     <div
       draggable
       onDragStart={(e) => e.dataTransfer.setData("text/plain", job.id)}
-      className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 space-y-2 cursor-grab active:cursor-grabbing"
+      className="dialog cursor-grab space-y-2.5 rounded-xl border border-line bg-white p-3.5 transition-colors hover:border-graphite active:cursor-grabbing"
     >
       <div className="flex justify-between gap-2">
         <div className="min-w-0">
-          <h4 className="font-semibold text-gray-900 text-sm leading-snug">{job.title}</h4>
-          <p className="text-xs text-gray-500 truncate">{job.company} · {job.location}</p>
+          <h4 className="font-sans text-sm leading-snug font-semibold tracking-normal">{job.title}</h4>
+          <p className="truncate text-xs text-mute">
+            {[job.company, job.location].filter(Boolean).join(", ")}
+          </p>
         </div>
-        <button type="button" onClick={() => onDelete(job.id)} className="text-gray-300 hover:text-red-500 shrink-0">
+        <button
+          type="button"
+          aria-label="Remove application"
+          onClick={() => onDelete(job)}
+          className="shrink-0 text-mute transition-colors hover:text-ink"
+        >
           <Trash2 size={14} />
         </button>
       </div>
 
       {reminder && (
-        <p className="flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 rounded-lg px-2 py-1">
+        <p className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800">
           <Bell size={12} /> {reminder}
         </p>
       )}
@@ -61,19 +70,20 @@ function JobCard({ job, onUpdate, onDelete }) {
       <select
         value={job.status}
         onChange={(e) => onUpdate(job.id, { status: e.target.value })}
-        className="w-full text-xs rounded-lg border border-gray-200 px-2 py-1.5 bg-gray-50"
+        aria-label="Stage"
+        className="w-full rounded-lg border border-line bg-paper px-2 py-1.5 text-xs"
       >
         {STAGES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
       </select>
 
       {["online_test", "interview"].includes(job.status) && (
-        <label className="flex items-center gap-2 text-xs text-gray-600">
+        <label className="flex items-center gap-2 text-xs text-graphite">
           <CalendarDays size={13} />
           <input
             type="date"
             value={job.interview_date || ""}
             onChange={(e) => onUpdate(job.id, { interview_date: e.target.value })}
-            className="flex-1 rounded-lg border border-gray-200 px-2 py-1"
+            className="flex-1 rounded-lg border border-line px-2 py-1"
           />
         </label>
       )}
@@ -84,19 +94,28 @@ function JobCard({ job, onUpdate, onDelete }) {
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           onBlur={() => notes !== job.notes && onUpdate(job.id, { notes })}
-          placeholder="Notes: recruiter name, round details..."
-          className="w-full text-xs rounded-lg border border-gray-200 px-2 py-1.5 resize-none"
+          placeholder="Recruiter name, round details"
+          className="w-full resize-none rounded-lg border border-line px-2 py-1.5 text-xs"
         />
       ) : (
-        <button type="button" onClick={() => setShowNotes(true)} className="flex items-center gap-1 text-xs text-gray-400 hover:text-indigo-600">
+        <button
+          type="button"
+          onClick={() => setShowNotes(true)}
+          className="flex items-center gap-1 text-xs text-mute transition-colors hover:text-ink"
+        >
           <StickyNote size={12} /> Add note
         </button>
       )}
 
-      <div className="flex justify-between items-center text-[11px] text-gray-400">
+      <div className="flex items-center justify-between text-[11px] text-mute">
         <span>Applied {daysSince(job.applied_at) === 0 ? "today" : `${daysSince(job.applied_at)}d ago`}</span>
         {job.apply_link && (
-          <a href={job.apply_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-indigo-600 hover:underline">
+          <a
+            href={job.apply_link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 font-medium text-ink hover:underline"
+          >
             Open <ExternalLink size={11} />
           </a>
         )}
@@ -108,13 +127,15 @@ function JobCard({ job, onUpdate, onDelete }) {
 function AppliedJobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [dropTarget, setDropTarget] = useState(null);
+  const toast = useToast();
 
   useEffect(() => {
     API.get("/jobs/applied")
       .then((res) => setJobs(res.data.applied_jobs || []))
-      .catch((err) => console.log(err.response?.data || err))
+      .catch(() => toast.error("Could not load your applications."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [toast]);
 
   const updateJob = async (id, changes) => {
     const previous = jobs;
@@ -122,20 +143,28 @@ function AppliedJobs() {
     try {
       const res = await API.patch(`/jobs/applied/${id}`, changes);
       setJobs((prev) => prev.map((j) => (j.id === id ? res.data.job : j)));
+      if (changes.status) toast.success(`Moved to ${STAGES.find((s) => s.id === changes.status).label}`);
     } catch {
       setJobs(previous);
-      alert("Could not update this application");
+      toast.error("Could not update this application.");
     }
   };
 
-  const deleteJob = async (id) => {
-    if (!confirm("Remove this application from your tracker?")) return;
+  const deleteJob = async (job) => {
+    const ok = await toast.confirm({
+      title: "Remove this application?",
+      message: `${job.title} at ${job.company} will be removed from your tracker.`,
+      confirmLabel: "Remove",
+    });
+    if (!ok) return;
     const previous = jobs;
-    setJobs((prev) => prev.filter((j) => j.id !== id));
+    setJobs((prev) => prev.filter((j) => j.id !== job.id));
     try {
-      await API.delete(`/jobs/applied/${id}`);
+      await API.delete(`/jobs/applied/${job.id}`);
+      toast.success("Application removed");
     } catch {
       setJobs(previous);
+      toast.error("Could not remove this application.");
     }
   };
 
@@ -143,59 +172,74 @@ function AppliedJobs() {
   const responded = jobs.filter((j) => j.status !== "applied").length;
   const reminders = jobs.filter(reminderFor);
   const stats = [
-    { label: "Total applications", value: jobs.length },
+    { label: "Applications", value: jobs.length },
     { label: "Response rate", value: jobs.length ? `${Math.round((100 * responded) / jobs.length)}%` : "-" },
     { label: "Interviews", value: count("interview") + count("offer") },
     { label: "Offers", value: count("offer") },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100">
-      <Nav subtitle="Track every application" showBack backTo="/jobs" centerTitle />
+    <div className="min-h-[100dvh]">
+      <Nav />
 
-      <main className="max-w-7xl mx-auto px-6 py-10 space-y-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {stats.map((s) => (
-            <div key={s.label} className="bg-white/85 rounded-2xl shadow p-4">
-              <p className="text-2xl font-bold text-gray-900">{s.value}</p>
-              <p className="text-xs text-gray-500">{s.label}</p>
-            </div>
+      <main className="mx-auto max-w-7xl space-y-8 px-4 py-12 sm:px-6 md:py-16">
+        <div>
+          <h1 className="text-4xl font-semibold md:text-5xl">Tracker</h1>
+          <p className="mt-3 text-lg text-graphite">Drag applications between stages as you hear back.</p>
+        </div>
+
+        <div className="grid grid-cols-2 overflow-hidden rounded-[20px] bg-ink text-white md:grid-cols-4">
+          {stats.map((s, i) => (
+            <Reveal key={s.label} index={i} className="border-white/10 p-6 odd:border-r md:border-r md:last:border-r-0">
+              <p className="font-display text-4xl font-semibold">{loading ? "-" : s.value}</p>
+              <p className="mt-1 text-sm text-white/60">{s.label}</p>
+            </Reveal>
           ))}
         </div>
 
         {reminders.length > 0 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
-            <h3 className="flex items-center gap-2 font-semibold text-amber-800 mb-2">
+          <div className="rounded-[20px] border border-amber-200 bg-amber-50 p-5">
+            <h2 className="mb-2 flex items-center gap-2 font-sans text-base font-semibold tracking-normal text-amber-900">
               <Bell size={16} /> Reminders
-            </h3>
-            <ul className="text-sm text-amber-900 space-y-1">
+            </h2>
+            <ul className="space-y-1 text-sm text-amber-900">
               {reminders.map((j) => <li key={j.id}>{j.title} at {j.company}: {reminderFor(j)}</li>)}
             </ul>
           </div>
         )}
 
         {!loading && jobs.length === 0 ? (
-          <div className="bg-white/85 rounded-2xl shadow p-10 text-center text-gray-600">
-            No applications yet. <Link to="/jobs" className="text-indigo-600 font-semibold underline">Find jobs</Link> and press "Mark" to track them here.
+          <div className="card p-10 text-center">
+            <p className="text-lg font-semibold">No applications yet</p>
+            <p className="mt-2 text-graphite">Press Mark on any job listing to track it here.</p>
+            <Link to="/jobs" className="btn btn-primary mt-6">Find jobs</Link>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
             {STAGES.map((stage) => (
               <section
                 key={stage.id}
-                onDragOver={(e) => e.preventDefault()}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDropTarget(stage.id);
+                }}
+                onDragLeave={() => setDropTarget(null)}
                 onDrop={(e) => {
+                  setDropTarget(null);
                   const id = e.dataTransfer.getData("text/plain");
                   const job = jobs.find((j) => j.id === id);
                   if (job && job.status !== stage.id) updateJob(id, { status: stage.id });
                 }}
-                className={`bg-white/60 rounded-2xl border-t-4 ${stage.color} p-3 min-h-40`}
+                className={`min-h-40 rounded-[20px] border p-3 transition-colors ${
+                  dropTarget === stage.id ? "border-ink bg-neutral-100" : "border-line bg-neutral-50"
+                }`}
               >
-                <h3 className="flex justify-between font-semibold text-gray-800 text-sm mb-3 px-1">
+                <h3 className="mb-3 flex justify-between px-1 font-sans text-sm font-semibold tracking-normal">
                   {stage.label}
-                  <span className="text-gray-400">{count(stage.id)}</span>
+                  <span className="text-mute">{count(stage.id)}</span>
                 </h3>
                 <div className="space-y-3">
+                  {loading && stage.id === "applied" && <div className="skeleton h-28 rounded-xl" />}
                   {jobs
                     .filter((j) => j.status === stage.id)
                     .map((job) => (
