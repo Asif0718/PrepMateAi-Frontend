@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Bell, CalendarDays, ExternalLink, StickyNote, Trash2 } from "lucide-react";
+import { Bell, CalendarDays, ExternalLink, FileSignature, StickyNote, Trash2 } from "lucide-react";
+import ApplicationKitModal from "../components/ApplicationKitModal";
 import API from "../api";
 import Nav from "../components/Nav";
 import Reveal from "../components/Reveal";
 import { useToast } from "../components/toast-context";
 
 const STAGES = [
+  { id: "shortlisted", label: "Shortlisted" },
   { id: "applied", label: "Applied" },
   { id: "online_test", label: "Online test" },
   { id: "interview", label: "Interview" },
@@ -33,10 +35,12 @@ function reminderFor(job) {
   return null;
 }
 
-function JobCard({ job, onUpdate, onDelete }) {
+function JobCard({ job, onUpdate, onDelete, onPrepare }) {
   const [notes, setNotes] = useState(job.notes);
   const [showNotes, setShowNotes] = useState(Boolean(job.notes));
   const reminder = reminderFor(job);
+  const shortlisted = job.status === "shortlisted";
+  const age = daysSince(job.applied_at);
 
   return (
     <div
@@ -60,6 +64,10 @@ function JobCard({ job, onUpdate, onDelete }) {
           <Trash2 size={14} />
         </button>
       </div>
+
+      {job.match_score != null && (
+        <span className="chip border-ink text-ink">{job.match_score}% match</span>
+      )}
 
       {reminder && (
         <p className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800">
@@ -88,6 +96,24 @@ function JobCard({ job, onUpdate, onDelete }) {
         </label>
       )}
 
+      {shortlisted && (
+        <button
+          type="button"
+          onClick={() => onUpdate(job.id, { status: "applied" })}
+          className="btn btn-primary btn-sm w-full"
+        >
+          Mark applied
+        </button>
+      )}
+
+      <button
+        type="button"
+        onClick={() => onPrepare(job)}
+        className="flex items-center gap-1 text-xs font-medium text-ink hover:underline"
+      >
+        <FileSignature size={12} /> {job.kit ? "View application kit" : "Application kit"}
+      </button>
+
       {showNotes ? (
         <textarea
           rows={2}
@@ -108,7 +134,9 @@ function JobCard({ job, onUpdate, onDelete }) {
       )}
 
       <div className="flex items-center justify-between text-[11px] text-mute">
-        <span>Applied {daysSince(job.applied_at) === 0 ? "today" : `${daysSince(job.applied_at)}d ago`}</span>
+        <span>
+          {shortlisted ? "Found" : "Applied"} {age === 0 ? "today" : `${age}d ago`}
+        </span>
         {job.apply_link && (
           <a
             href={job.apply_link}
@@ -128,7 +156,13 @@ function AppliedJobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dropTarget, setDropTarget] = useState(null);
+  const [kitJob, setKitJob] = useState(null);
   const toast = useToast();
+
+  const saveKit = useCallback(
+    (kit) => setJobs((prev) => prev.map((j) => (j.id === kitJob?.id ? { ...j, kit } : j))),
+    [kitJob?.id]
+  );
 
   useEffect(() => {
     API.get("/jobs/applied")
@@ -169,11 +203,12 @@ function AppliedJobs() {
   };
 
   const count = (status) => jobs.filter((j) => j.status === status).length;
-  const responded = jobs.filter((j) => j.status !== "applied").length;
+  const tracked = jobs.length - count("shortlisted");
+  const responded = tracked - count("applied");
   const reminders = jobs.filter(reminderFor);
   const stats = [
-    { label: "Applications", value: jobs.length },
-    { label: "Response rate", value: jobs.length ? `${Math.round((100 * responded) / jobs.length)}%` : "-" },
+    { label: "Applications", value: tracked },
+    { label: "Response rate", value: tracked ? `${Math.round((100 * responded) / tracked)}%` : "-" },
     { label: "Interviews", value: count("interview") + count("offer") },
     { label: "Offers", value: count("offer") },
   ];
@@ -211,11 +246,13 @@ function AppliedJobs() {
         {!loading && jobs.length === 0 ? (
           <div className="card p-10 text-center">
             <p className="text-lg font-semibold">No applications yet</p>
-            <p className="mt-2 text-graphite">Press Mark on any job listing to track it here.</p>
+            <p className="mt-2 text-graphite">
+              Press Mark on any job listing, or set a daily alert on the Jobs page to get matches here automatically.
+            </p>
             <Link to="/jobs" className="btn btn-primary mt-6">Find jobs</Link>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
+          <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
             {STAGES.map((stage) => (
               <section
                 key={stage.id}
@@ -239,11 +276,11 @@ function AppliedJobs() {
                   <span className="text-mute">{count(stage.id)}</span>
                 </h3>
                 <div className="space-y-3">
-                  {loading && stage.id === "applied" && <div className="skeleton h-28 rounded-xl" />}
+                  {loading && stage.id === "shortlisted" && <div className="skeleton h-28 rounded-xl" />}
                   {jobs
                     .filter((j) => j.status === stage.id)
                     .map((job) => (
-                      <JobCard key={job.id} job={job} onUpdate={updateJob} onDelete={deleteJob} />
+                      <JobCard key={job.id} job={job} onUpdate={updateJob} onDelete={deleteJob} onPrepare={setKitJob} />
                     ))}
                 </div>
               </section>
@@ -251,6 +288,15 @@ function AppliedJobs() {
           </div>
         )}
       </main>
+
+      {kitJob && (
+        <ApplicationKitModal
+          job={kitJob}
+          trackedJobId={kitJob.id}
+          onSaved={saveKit}
+          onClose={() => setKitJob(null)}
+        />
+      )}
     </div>
   );
 }

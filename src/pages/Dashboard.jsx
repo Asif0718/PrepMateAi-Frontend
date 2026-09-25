@@ -9,7 +9,7 @@ import { useToast } from "../components/toast-context";
 const STATUS = ["Reading your resume", "Comparing it with the job", "Writing your 7-day guide"];
 
 const SHORTCUTS = [
-  ["/jobs", "Find jobs", "Listings ranked by how well they match your skills."],
+  ["/jobs", "Find jobs", "Match scores, daily alerts and ready-to-send applications."],
   ["/mock-interview", "Mock interview", "Practise role-specific questions and get scored."],
   ["/applied-jobs", "Tracker", "Every application, by stage, with reminders."],
 ];

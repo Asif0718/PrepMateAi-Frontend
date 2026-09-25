@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import API, { apiError } from "../api";
 import Nav from "../components/Nav";
 import TailorModal from "../components/TailorModal";
-import { ExternalLink, CheckCircle2, MapPin, Building2, Clock, Search, Wand2, Check, Plus } from "lucide-react";
+import ApplicationKitModal from "../components/ApplicationKitModal";
+import { BellPlus, BellRing, ExternalLink, CheckCircle2, MapPin, Building2, Clock, FileSignature, Search, Wand2, Check, Plus, X } from "lucide-react";
 import Reveal from "../components/Reveal";
 import { useToast } from "../components/toast-context";
 
@@ -13,7 +14,7 @@ function matchColor(score) {
   return "bg-red-50 text-red-700 border-red-200";
 }
 
-function JobCard({ job, index, applied, onApply, onTailor, canTailor }) {
+function JobCard({ job, index, applied, onApply, onTailor, onPrepare, canTailor }) {
   const match = job.match;
 
   return (
@@ -86,12 +87,18 @@ function JobCard({ job, index, applied, onApply, onTailor, canTailor }) {
           className={`btn btn-sm ${applied ? "bg-neutral-100 text-graphite" : "btn-secondary"}`}
         >
           <CheckCircle2 size={14} />
-          {applied ? "Applied" : "Mark"}
+          {applied ? (applied === "shortlisted" ? "Shortlisted" : "Tracked") : "Mark"}
         </button>
         {canTailor && job.description && (
           <button type="button" onClick={() => onTailor(job)} className="btn btn-secondary btn-sm">
             <Wand2 size={14} />
             Tailor
+          </button>
+        )}
+        {canTailor && (
+          <button type="button" onClick={() => onPrepare(job)} className="btn btn-secondary btn-sm">
+            <FileSignature size={14} />
+            Prepare
           </button>
         )}
       </div>
@@ -123,13 +130,45 @@ export default function Jobs() {
   const [error, setError] = useState(null);
   const [hasResume, setHasResume] = useState(null);
   const [tailorJob, setTailorJob] = useState(null);
+  const [kitJob, setKitJob] = useState(null);
+  const [alerts, setAlerts] = useState([]);
+  const [searched, setSearched] = useState(null);
   const toast = useToast();
 
   useEffect(() => {
     API.get("/jobs/applied")
       .then((res) => setAppliedJobs(res.data.applied_jobs || []))
       .catch(() => {});
+    API.get("/jobs/alerts")
+      .then((res) => setAlerts(res.data.alerts || []))
+      .catch(() => {});
   }, []);
+
+  const same = (a, b) => a.trim().toLowerCase() === b.trim().toLowerCase();
+  const hasAlert =
+    searched && alerts.some((a) => same(a.query, searched.query) && same(a.location, searched.location));
+
+  const addAlert = async () => {
+    try {
+      const res = await API.post("/jobs/alerts", searched);
+      setAlerts((prev) => [...prev, res.data.alert]);
+      toast.success("Alert saved. New matches will land in your tracker every morning.");
+    } catch (err) {
+      toast.error(apiError(err, "Could not save the alert."));
+    }
+  };
+
+  const removeAlert = async (alert) => {
+    const previous = alerts;
+    setAlerts((prev) => prev.filter((a) => a.id !== alert.id));
+    try {
+      await API.delete(`/jobs/alerts/${alert.id}`);
+      toast.success("Alert deleted");
+    } catch {
+      setAlerts(previous);
+      toast.error("Could not delete the alert.");
+    }
+  };
 
   const fetchJobs = async () => {
     if (!query.trim() || !location.trim()) {
@@ -142,6 +181,7 @@ export default function Jobs() {
       const res = await API.get("/jobs/search", { params: { query, location } });
       setJobs(res.data.jobs || []);
       setHasResume(res.data.has_resume);
+      setSearched({ query: query.trim(), location: location.trim() });
     } catch (err) {
       setError(apiError(err, "Failed to fetch jobs"));
     } finally {
@@ -156,6 +196,8 @@ export default function Jobs() {
         company: job.company,
         location: job.location,
         apply_link: job.apply_link,
+        description: job.description,
+        match_score: job.match?.score ?? null,
       });
       setAppliedJobs((prev) => [res.data.job, ...prev]);
       toast.success("Added to your tracker");
@@ -164,10 +206,10 @@ export default function Jobs() {
     }
   };
 
-  const isAlreadyApplied = (job) =>
-    appliedJobs.some(
+  const trackedStatus = (job) =>
+    appliedJobs.find(
       (a) => a.title === job.title && a.company === job.company && a.location === job.location
-    );
+    )?.status;
 
   return (
     <div className="min-h-[100dvh]">
@@ -203,6 +245,35 @@ export default function Jobs() {
 
         {error && <p className="jobs-error">{error}</p>}
 
+        {(alerts.length > 0 || searched) && (
+          <div className="mb-6 flex flex-wrap items-center gap-2 text-sm">
+            {alerts.length > 0 && (
+              <span className="mr-1 flex items-center gap-1.5 font-medium">
+                <BellRing size={15} /> Daily alerts
+              </span>
+            )}
+            {alerts.map((a) => (
+              <span key={a.id} className="chip py-1 pr-1 text-ink">
+                {a.query}, {a.location}
+                <button
+                  type="button"
+                  aria-label={`Delete alert for ${a.query}`}
+                  onClick={() => removeAlert(a)}
+                  className="rounded-full p-0.5 text-mute transition-colors hover:bg-neutral-100 hover:text-ink"
+                >
+                  <X size={12} />
+                </button>
+              </span>
+            ))}
+            {searched && !hasAlert && alerts.length < 3 && (
+              <button type="button" onClick={addAlert} className="btn btn-secondary btn-sm">
+                <BellPlus size={14} />
+                Alert me daily about this search
+              </button>
+            )}
+          </div>
+        )}
+
         {hasResume === false && jobs.length > 0 && (
           <p className="mb-6 rounded-xl bg-neutral-100 px-4 py-3 text-sm text-graphite">
             <Link to="/dashboard" className="font-semibold text-ink underline underline-offset-4">Upload your resume</Link>{" "}
@@ -219,9 +290,10 @@ export default function Jobs() {
                   key={`${job.company}-${job.title}-${i}`}
                   job={job}
                   index={i}
-                  applied={isAlreadyApplied(job)}
+                  applied={trackedStatus(job)}
                   onApply={markAsApplied}
                   onTailor={setTailorJob}
+                  onPrepare={setKitJob}
                   canTailor={hasResume}
                 />
               ))
@@ -239,6 +311,7 @@ export default function Jobs() {
       </main>
 
       {tailorJob && <TailorModal job={tailorJob} onClose={() => setTailorJob(null)} />}
+      {kitJob && <ApplicationKitModal job={kitJob} onClose={() => setKitJob(null)} />}
     </div>
   );
 }
