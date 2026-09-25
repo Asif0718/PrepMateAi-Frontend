@@ -6,6 +6,7 @@ import {
   Briefcase,
   LogOut,
   ArrowLeft,
+  MessagesSquare,
 } from "lucide-react";
 
 function Nav({
@@ -83,7 +84,16 @@ function Nav({
                 className="w-full flex items-center gap-3 text-left px-4 py-3 rounded-xl hover:bg-indigo-50 text-gray-800 font-medium transition"
               >
                 <Briefcase size={16} className="text-indigo-600" />
-                Applied Jobs
+                Application Tracker
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate("/mock-interview")}
+                className="w-full flex items-center gap-3 text-left px-4 py-3 rounded-xl hover:bg-indigo-50 text-gray-800 font-medium transition"
+              >
+                <MessagesSquare size={16} className="text-indigo-600" />
+                Mock Interview
               </button>
 
               <button

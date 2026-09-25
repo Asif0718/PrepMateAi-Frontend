@@ -9,6 +9,7 @@ import PreparationGuide from "./pages/PreparationGuide";
 import Jobs from "./pages/Jobs";
 import PrepHistory from "./pages/PrepHistory";
 import AppliedJobs from "./pages/AppliedJobs";
+import MockInterview from "./pages/MockInterview";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -76,6 +77,13 @@ function App() {
         path="/applied-jobs"
         element={
           isLoggedIn ? <AppliedJobs /> : <Navigate to="/login" replace />
+        }
+      />
+
+      <Route
+        path="/mock-interview"
+        element={
+          isLoggedIn ? <MockInterview /> : <Navigate to="/login" replace />
         }
       />
     </Routes>

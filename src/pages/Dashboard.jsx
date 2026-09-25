@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../api";
+import API, { apiError } from "../api";
 import Nav from "../components/Nav";
 import { FaCloudUploadAlt } from "react-icons/fa";
 
@@ -10,7 +10,6 @@ function Dashboard() {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
 
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -27,20 +26,14 @@ function Dashboard() {
     try {
       setLoading(true);
 
-      const res = await API.post("/resume/upload", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const res = await API.post("/resume/upload", formData);
 
       localStorage.setItem("preparationGuide", res.data.preparation_guide);
 
-      alert("Resume analyzed successfully");
       navigate("/preparation-guide");
     } catch (err) {
       console.log(err.response?.data || err);
-      alert("Upload failed");
+      alert(apiError(err, "Upload failed"));
     } finally {
       setLoading(false);
     }
@@ -66,10 +59,11 @@ function Dashboard() {
             <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-3xl shadow-xl p-6 text-white">
               <h3 className="text-xl font-bold">What you get?</h3>
               <ul className="mt-4 space-y-3 text-sm text-white/90">
-                <li>✓ Resume matching score</li>
-                <li>✓ Missing skills suggestion</li>
                 <li>✓ Interview preparation guide</li>
-                <li>✓ Job role improvement tips</li>
+                <li>✓ Match score on every job listing</li>
+                <li>✓ Resume tailored to each job (ATS)</li>
+                <li>✓ AI mock interviews with scoring</li>
+                <li>✓ Application tracker with reminders</li>
               </ul>
             </div>
           </div>
@@ -141,6 +135,23 @@ function Dashboard() {
               >
                 View Job Recommendations
               </button>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => navigate("/mock-interview")}
+                  className="py-4 rounded-2xl bg-white border-2 border-purple-400 text-purple-600 font-bold shadow-md hover:bg-purple-50 hover:scale-[1.01] active:scale-[0.98] transition"
+                >
+                  Start Mock Interview
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/applied-jobs")}
+                  className="py-4 rounded-2xl bg-white border-2 border-pink-400 text-pink-600 font-bold shadow-md hover:bg-pink-50 hover:scale-[1.01] active:scale-[0.98] transition"
+                >
+                  Application Tracker
+                </button>
+              </div>
             </form>
           </div>
         </div>

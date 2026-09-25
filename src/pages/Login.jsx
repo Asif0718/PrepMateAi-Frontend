@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../api";
 
@@ -11,6 +11,10 @@ function Login() {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    API.get("/health").catch(() => {});
+  }, []);
 
   const handleChange = (e) => {
     setForm({

@@ -1,19 +1,37 @@
 import { useEffect, useState } from "react";
-import API from "../api";
+import { Link } from "react-router-dom";
+import API, { apiError } from "../api";
 import Nav from "../components/Nav";
-import { ExternalLink, CheckCircle2, MapPin, Building2, Clock, Search } from "lucide-react";
+import TailorModal from "../components/TailorModal";
+import { ExternalLink, CheckCircle2, MapPin, Building2, Clock, Search, Wand2 } from "lucide-react";
 
-function JobCard({ job, applied, onApply }) {
+function matchColor(score) {
+  if (score >= 70) return "bg-emerald-50 text-emerald-700 border-emerald-200";
+  if (score >= 40) return "bg-amber-50 text-amber-700 border-amber-200";
+  return "bg-red-50 text-red-700 border-red-200";
+}
+
+function JobCard({ job, applied, onApply, onTailor, canTailor }) {
+  const match = job.match;
+
   return (
     <article className="job-card">
       <div className="job-card-header">
         <div className="job-card-icon">
           <Building2 size={18} />
         </div>
-        <div className="job-card-meta">
+        <div className="job-card-meta flex-1">
           <h3 className="job-card-title">{job.title || "Untitled"}</h3>
           <p className="job-card-company">{job.company || "Company"}</p>
         </div>
+        {match && (
+          <span
+            title="How many of this job's skills are on your resume"
+            className={`shrink-0 text-xs font-bold px-2 py-1 rounded-lg border ${matchColor(match.score)}`}
+          >
+            {match.score}% match
+          </span>
+        )}
       </div>
       <div className="job-card-details">
         {job.location && (
@@ -35,6 +53,16 @@ function JobCard({ job, applied, onApply }) {
             ? `${job.description.slice(0, 160)}...`
             : job.description}
         </p>
+      )}
+      {match && (match.matched.length > 0 || match.missing.length > 0) && (
+        <div className="flex flex-wrap gap-1 text-[11px]">
+          {match.matched.slice(0, 5).map((s) => (
+            <span key={s} className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">✓ {s}</span>
+          ))}
+          {match.missing.slice(0, 4).map((s) => (
+            <span key={s} className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">+ {s}</span>
+          ))}
+        </div>
       )}
       <div className="job-card-actions">
         {job.apply_link ? (
@@ -58,6 +86,12 @@ function JobCard({ job, applied, onApply }) {
           <CheckCircle2 size={14} />
           {applied ? "Applied" : "Mark"}
         </button>
+        {canTailor && job.description && (
+          <button type="button" onClick={() => onTailor(job)} className="btn-mark">
+            <Wand2 size={14} />
+            Tailor
+          </button>
+        )}
       </div>
     </article>
   );
@@ -85,21 +119,14 @@ export default function Jobs() {
   const [loading, setLoading] = useState(false);
   const [appliedJobs, setAppliedJobs] = useState([]);
   const [error, setError] = useState(null);
+  const [hasResume, setHasResume] = useState(null);
+  const [tailorJob, setTailorJob] = useState(null);
 
-  const token = localStorage.getItem("token");
-
-  const fetchAppliedJobs = async () => {
-    try {
-      const res = await API.get("/jobs/applied", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setAppliedJobs(res.data.applied_jobs || []);
-    } catch {
-      // silent
-    }
-  };
-
-  useEffect(() => { fetchAppliedJobs(); }, []);
+  useEffect(() => {
+    API.get("/jobs/applied")
+      .then((res) => setAppliedJobs(res.data.applied_jobs || []))
+      .catch(() => {});
+  }, []);
 
   const fetchJobs = async () => {
     if (!query.trim() || !location.trim()) {
@@ -111,8 +138,9 @@ export default function Jobs() {
     try {
       const res = await API.get("/jobs/search", { params: { query, location } });
       setJobs(res.data.jobs || []);
+      setHasResume(res.data.has_resume);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch jobs");
+      setError(apiError(err, "Failed to fetch jobs"));
     } finally {
       setLoading(false);
     }
@@ -120,13 +148,13 @@ export default function Jobs() {
 
   const markAsApplied = async (job) => {
     try {
-      await API.post("/jobs/applied", {
+      const res = await API.post("/jobs/applied", {
         title: job.title,
         company: job.company,
         location: job.location,
         apply_link: job.apply_link,
-      }, { headers: { Authorization: `Bearer ${token}` } });
-      fetchAppliedJobs();
+      });
+      setAppliedJobs((prev) => [res.data.job, ...prev]);
     } catch {
       alert("Failed to mark as applied");
     }
@@ -171,6 +199,13 @@ export default function Jobs() {
 
         {error && <p className="jobs-error">{error}</p>}
 
+        {hasResume === false && jobs.length > 0 && (
+          <p className="mb-4 text-sm bg-indigo-50 text-indigo-700 rounded-xl px-4 py-3">
+            <Link to="/dashboard" className="font-semibold underline">Upload your resume</Link>{" "}
+            to see your match score for each job and tailor your resume to it.
+          </p>
+        )}
+
         <div className="jobs-grid">
           {loading
             ? Array.from({ length: 6 }).map((_, i) => <JobSkeleton key={i} />)
@@ -181,6 +216,8 @@ export default function Jobs() {
                   job={job}
                   applied={isAlreadyApplied(job)}
                   onApply={markAsApplied}
+                  onTailor={setTailorJob}
+                  canTailor={hasResume}
                 />
               ))
             : query || location ? (
@@ -195,6 +232,8 @@ export default function Jobs() {
               )}
         </div>
       </main>
+
+      {tailorJob && <TailorModal job={tailorJob} onClose={() => setTailorJob(null)} />}
     </div>
   );
 }
