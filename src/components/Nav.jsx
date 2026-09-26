@@ -31,7 +31,7 @@ function Nav() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-line bg-white/95 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-line bg-white/95">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6">
         <Link to="/dashboard" className="shrink-0 font-display text-xl font-semibold">
           PrepMate

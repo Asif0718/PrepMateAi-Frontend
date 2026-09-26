@@ -1,14 +1,36 @@
 import { Link } from "react-router-dom";
-import { Check, Mic, Plus } from "lucide-react";
+import { BellRing, Check, Mic, Plus } from "lucide-react";
 import Reveal from "../components/Reveal";
 
 const HEADLINE = "Walk into placement season ready.";
 
 const STEPS = [
   ["Upload your resume", "Add a PDF and paste the job description you are aiming for."],
-  ["Get a 7-day guide", "A day-by-day plan built from the gap between your resume and the role."],
-  ["Practise the interview", "Answer role-specific questions out loud or in text, and get each one scored."],
-  ["Apply and track", "Find matching jobs, tailor your resume, and move applications across your board."],
+  [
+    "Follow a 7-day plan",
+    "See your skill gaps, likely questions and a day-by-day plan with a learning resource for each day. Tick days off as you go.",
+  ],
+  [
+    "Practise the interview",
+    "Answer technical and HR questions by voice or text. Each answer is scored with feedback and a stronger sample answer.",
+  ],
+  [
+    "Find jobs that fit",
+    "Search live listings with a match score for each one, or save a search and get new matches shortlisted every morning.",
+  ],
+  [
+    "Apply in minutes",
+    "Tailor your resume to the job's keywords and get a cover letter, recruiter message and application answers in one click.",
+  ],
+  [
+    "Track every application",
+    "Move jobs from shortlisted to offer and get an email before interviews and when a follow-up is due.",
+  ],
+];
+
+const ALERTS = [
+  ["Frontend Developer", "82%"],
+  ["React Engineer", "74%"],
 ];
 
 const STAGES = [
@@ -129,6 +151,38 @@ function Home() {
               ))}
             </div>
           </Reveal>
+
+          <Reveal index={4} className="flex flex-col gap-6 rounded-[20px] bg-neutral-100 p-8 md:col-span-3 md:p-10">
+            <div>
+              <h3 className="text-2xl font-semibold">Tailored applications</h3>
+              <p className="mt-2 max-w-md text-graphite">
+                Match your resume to each job's keywords, then get everything you need to apply.
+              </p>
+            </div>
+            <div className="mt-auto flex flex-wrap gap-2">
+              {["ATS keywords", "Cover letter", "Recruiter message", "Application answers"].map((t) => (
+                <span key={t} className="chip bg-white"><Check size={12} /> {t}</span>
+              ))}
+            </div>
+          </Reveal>
+
+          <Reveal index={5} className="flex flex-col gap-6 rounded-[20px] bg-ink p-8 text-white md:col-span-3 md:p-10">
+            <div className="flex items-center justify-between">
+              <h3 className="text-2xl font-semibold">Daily job alerts</h3>
+              <BellRing size={22} className="text-white/60" />
+            </div>
+            <p className="max-w-md text-white/70">
+              New matches for your saved searches are shortlisted and emailed to you every morning.
+            </p>
+            <ul className="mt-auto space-y-2">
+              {ALERTS.map(([role, score]) => (
+                <li key={role} className="flex items-center justify-between rounded-xl bg-white/10 px-4 py-3 text-sm">
+                  <span>{role}</span>
+                  <span className="font-display font-semibold">{score} match</span>
+                </li>
+              ))}
+            </ul>
+          </Reveal>
         </div>
       </section>
 
@@ -139,7 +193,7 @@ function Home() {
               How it works
             </Reveal>
             <Reveal as="p" index={1} className="mt-5 max-w-sm text-lg text-white/60">
-              Four steps from a blank page to a prepared interview.
+              Six steps from a blank page to an offer.
             </Reveal>
           </div>
 
