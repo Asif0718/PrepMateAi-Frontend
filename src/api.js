@@ -16,6 +16,17 @@ API.interceptors.request.use((req) => {
   return req;
 });
 
+API.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401 && localStorage.getItem("token")) {
+      localStorage.removeItem("token");
+      window.dispatchEvent(new Event("authChange"));
+    }
+    return Promise.reject(err);
+  }
+);
+
 export const apiError = (err, fallback = "Something went wrong") => {
   const detail = err.response?.data?.detail;
   return typeof detail === "string" ? detail : fallback;
