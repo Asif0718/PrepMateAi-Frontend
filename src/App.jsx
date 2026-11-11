@@ -10,18 +10,29 @@ import Jobs from "./pages/Jobs";
 import PrepHistory from "./pages/PrepHistory";
 import AppliedJobs from "./pages/AppliedJobs";
 import MockInterview from "./pages/MockInterview";
+import API from "./api";
 
 function App() {
   const { pathname } = useLocation();
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    !!localStorage.getItem("token")
-  );
+  const [isLoggedIn, setIsLoggedIn] = useState(null);
 
   useEffect(() => {
-    const checkLogin = () => {
-      setIsLoggedIn(!!localStorage.getItem("token"));
+    const checkLogin = async () => {
+      if (!localStorage.getItem("token")) {
+        setIsLoggedIn(false);
+        return;
+      }
+
+      try {
+        await API.get("/auth/me");
+        setIsLoggedIn(true);
+      } catch {
+        localStorage.removeItem("token");
+        setIsLoggedIn(false);
+      }
     };
 
+    checkLogin();
     window.addEventListener("storage", checkLogin);
     window.addEventListener("authChange", checkLogin);
 
@@ -30,6 +41,8 @@ function App() {
       window.removeEventListener("authChange", checkLogin);
     };
   }, []);
+
+  if (isLoggedIn === null) return null;
 
   return (
     <div key={pathname} className="page-enter">
